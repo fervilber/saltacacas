@@ -40,6 +40,8 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.image = pygame.image.load('assets/player12.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (70, 60))
+        self.collision_image = pygame.image.load('assets/player12_ko.png').convert_alpha()
+        self.collision_image = pygame.transform.scale(self.collision_image, (70, 60))
         self.rect = self.image.get_rect()
         self.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         self.speed_x = 0
@@ -91,10 +93,10 @@ class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = pygame.image.load('assets/platform1.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (200, 20))
+        self.image = pygame.transform.scale(self.image, (random.randint(100, 200) , 20))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
-        self.speed_x = -3  # Velocidad horizontal
+        self.speed_x = random.randint(-5, -2)  # Velocidad horizontal
 
     def update(self):
         self.rect.x += self.speed_x
@@ -152,12 +154,12 @@ player = Player()
 all_sprites.add(player)
 
 # Crear plataformas
-platform1 = Platform(100, 500)
-platform2 = Platform(400, 400)
-platform3 = Platform(250, 300)
+platform1 = Platform(100, random.randint(400, 550) )#500)
+platform2 = Platform(400, random.randint(100, 350) )#400)
+#platform3 = Platform(250, 300)
 
-platforms.add(platform1, platform2, platform3)
-all_sprites.add(platform1, platform2, platform3)
+platforms.add(platform1, platform2) #, platform3)
+all_sprites.add(platform1, platform2) #, platform3)
 
 # Función para crear enemigos
 def create_enemy():
@@ -168,13 +170,17 @@ def create_enemy():
     all_sprites.add(enemy)
 
 # Crear enemigos
-create_enemy()
-create_enemy()  # Crear más enemigos si es necesario
+#create_enemy()
+#create_enemy()  # Crear más enemigos si es necesario
+# Crear un número aleatorio de enemigos al inicio del juego
+num_enemies = random.randint(2, 5)
+for _ in range(num_enemies):
+    create_enemy()
 
 # Función para crear frutas
 def create_fruit():
-    x = SCREEN_WIDTH
-    y = random.randint(0, SCREEN_HEIGHT - 30)
+    x = SCREEN_WIDTH # lado derecho de la pantalla
+    y = random.randint(0, SCREEN_HEIGHT - 30) # cualquier punto de la vertical 
     fruit_type = random.choice(['apple', 'banana', 'grape', 'tomato'])
     speed_x = random.randint(-3, -1)  # Velocidad aleatoria hacia la izquierda
     fruit = Fruit(x, y, fruit_type, speed_x)
@@ -183,7 +189,7 @@ def create_fruit():
 
 # Crear frutas
 create_fruit()
-create_fruit()  # Crear más frutas si es necesario
+create_fruit() 
 create_fruit()
 
 # Función para dibujar vidas
@@ -197,7 +203,7 @@ def draw_lives(surface, x, y, lives, image):
 # Función para dibujar puntos
 def draw_points(surface, points, x, y):
     font = pygame.font.Font(None, 48)  # Fuente grande
-    text = font.render(f'Points: {points}', True, RED)
+    text = font.render(f'Puntuación: {points}', True, RED)
     text_rect = text.get_rect()
     text_rect.topright = (x, y)
     surface.blit(text, text_rect)
@@ -218,6 +224,10 @@ while running:
         elif event.type == pygame.KEYUP:
             if event.key in (pygame.K_LEFT, pygame.K_RIGHT):
                 player.stop()
+        elif event.type == pygame.USEREVENT:
+            player.image = pygame.image.load('assets/sofia.png').convert_alpha()
+            player.image = pygame.transform.scale(player.image, (70, 60))
+            pygame.time.set_timer(pygame.USEREVENT, 0)  # Detener el temporizador
 
     # Actualizar sprites
     all_sprites.update()
@@ -238,13 +248,16 @@ while running:
     enemy_hits = pygame.sprite.spritecollide(player, enemies, False)
     if enemy_hits and not player.invulnerable:
         player.lives -= 1
-        print(f"Lives left: {player.lives}")
+        print(f"Vidas: {player.lives}")
+        player.image = player.collision_image  # Cambiar a imagen de colisión
         player.become_invulnerable(120)  # 2 segundos de invulnerabilidad
+        pygame.time.set_timer(pygame.USEREVENT, 1000)  # Temporizador de 0.5 segundos para restaurar la imagen original
         if player.lives == 0:
             print("Game Over")
             # Mostrar pantalla de GAME OVER
             screen.blit(game_over_image, (0, 0))
-            pygame.display.flip()
+            draw_points(screen, player.points, (SCREEN_WIDTH // 2) + 100 , (SCREEN_HEIGHT // 2) + 100)  # Dibujar puntos
+            pygame.display.flip() 
             pygame.time.wait(3000)  # Esperar 3 segundos antes de cerrar
             running = False
 
@@ -252,13 +265,13 @@ while running:
     fruit_hits = pygame.sprite.spritecollide(player, fruits, True)
     for fruit in fruit_hits:
         player.points += fruit.value
-        print(f"Points: {player.points}")
+        print(f"Puntos: {player.points}")
 
     # Dibujar en la pantalla
     screen.blit(background, (0, 0))  # Dibujar el fondo
     all_sprites.draw(screen)
     draw_lives(screen, 10, 10, player.lives, heart_image)  # Dibujar vidas
-    draw_points(screen, player.points, SCREEN_WIDTH - 10, 10)  # Dibujar puntos
+    draw_points(screen, player.points, SCREEN_WIDTH -10, 10)  # Dibujar puntos
     pygame.display.flip()
 
     # Controlar FPS
