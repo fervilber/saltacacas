@@ -39,7 +39,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pygame.image.load('assets/player12.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (60, 70))
+        self.image = pygame.transform.scale(self.image, (70, 60))
         self.rect = self.image.get_rect()
         self.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         self.speed_x = 0
@@ -103,7 +103,7 @@ class Platform(pygame.sprite.Sprite):
         if self.rect.right < 0:
             self.rect.left = SCREEN_WIDTH
 
-# Clase Enemigo
+# Clase Enemigo, las cacas
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
