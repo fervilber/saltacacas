@@ -9,3 +9,17 @@ Así que este juego trata de que un personaje principal sale de casa y tiene que
 ![imagen del juego](assets/fondo.png)
 
 Autores: Fernando Villalba y familia
+
+
+## Notas de programacion
+Para compartir el juego hay que instalar la librería *pyinstaller*: 
+
+> pip install pyinstaller 
+
+Después, una vez hemos terminado el juego y desde el directorio del proyecto hacemos esto:
+
+ > pyinstaller --windowed --onefile saltakks.py
+
+ Siendo *saltakks.py* el fichero principal del juego, que contiene el código.
+
+ Parece que habitualmente el windows defender da un aviso de troyano al generar esto.
