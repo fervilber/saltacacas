@@ -1,17 +1,28 @@
 # SALTACACAS
-Saltacacas es nuestro primero juego hecho en familia.
+Saltacacas es un proyecto familiar y nuestro primer juego de ordenador hecho en python.
 
-La idea es crear un juego relacionado con nuestra rutina mañanera de ir al cole.
-y es que cada día en el camino encontramos obstáculos que nos impiden hacer la ruta normal, como cacas de perrito, y otras lindezas.
+La idea se nos ocurió en el camino habitual al cole, ya que nos pasamos el paseo de casa al colegio saltando cacas de perrito, que sus queridos dueños no quieren recoger de las aceras.
 
-Así que este juego trata de que un personaje principal sale de casa y tiene que llegar al cole sin pisar las cacas que encuentra por el camino. Además para conseguir puntos tiene que ir comiendo frutas sanas, algunas como el tomate da 5 puntos y las otras 1 punto.
+Este juego trata, como su nombre indica, de llegar al cole sano y salvo, sin pisar ninguna caca de perro.
+Hay 3 personajes a elegir, en la pantalla de inicio. El personaje puede avanzar, retroceder y saltar, incluso puede subirse a algunos monopatines que aparecen por las calles.
 
-![imagen del juego](assets/fondo.png)
+Los puntos se consiguen recogiendo fruta que vale 1 punto, o un bocata que vale 3. Hay que llegar con energía al cole y es necesria para saltar las cacas.
 
-Autores: Fernando Villalba y familia
+![Portada y seleccion de personajes](assets/imagen_portada.png)
 
+![imagen del juego](assets/imagen_juego1.png)
+
+Autores:
+ * Fernando Villalba
+ * Sofía Villalba
+ * Eva Villalba
+
+# Versión descargable para PC
+
+En la carpeta *dist*, se encuentra la versión descargable para PC. Hay que descargar el ejecutable y la carpeta de imagenes tal cual.
 
 ## Notas de programacion
+
 Para compartir el juego hay que instalar la librería *pyinstaller*: 
 
 > pip install pyinstaller 

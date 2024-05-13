@@ -2,6 +2,8 @@
 import pygame
 import sys
 import random
+import csv
+from datetime import datetime
 
 # Inicialización de Pygame
 pygame.init()
@@ -28,12 +30,20 @@ shit_sound = pygame.mixer.Sound('assets/uh-ohh-38886.mp3')
 
 
 # Cargar Fondo
-background = pygame.image.load('assets/fondo.png')
-background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+#background = pygame.image.load('assets/fondo2.png')
+#background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# Cargar Fondo alargado
+background = pygame.image.load('assets/fondo_largo3.png')
+background_width = background.get_width()
+background_height = background.get_height()
+background = pygame.transform.scale(background, (background_width, SCREEN_HEIGHT))
+background_width = background.get_width()
+background_height = background.get_height()
 
 # Cargar Corazón
 heart_image = pygame.image.load('assets/heart.png')
-heart_image = pygame.transform.scale(heart_image, (30, 30))  # Ajustar tamaño del corazón
+heart_image = pygame.transform.scale(heart_image, (40, 40))  # Ajustar tamaño del corazón
 
 # Cargar Game Over
 game_over_image = pygame.image.load('assets/game_over.png')
@@ -43,18 +53,81 @@ game_over_image = pygame.transform.scale(game_over_image, (SCREEN_WIDTH, SCREEN_
 start_screen = pygame.image.load('assets/start_screen.png')
 start_screen = pygame.transform.scale(start_screen, (SCREEN_WIDTH, SCREEN_HEIGHT))
 player1_image = pygame.image.load('assets/player1.png').convert_alpha()
-player1_image = pygame.transform.scale(player1_image, (50, 50))
+player1_image = pygame.transform.scale(player1_image, (60, 60))
 player2_image = pygame.image.load('assets/player2.png').convert_alpha()
-player2_image = pygame.transform.scale(player2_image, (50, 50))
+player2_image = pygame.transform.scale(player2_image, (60, 60))
 player3_image = pygame.image.load('assets/player3.png').convert_alpha()
 player3_image = pygame.transform.scale(player3_image, (60, 60))
 
+
+# Función para crear fichero de puntuaciones máximas
+def check_create_csv(file_name='high_scores.csv'):
+    try:
+        with open(file_name, 'r') as file:
+            pass  # El archivo ya existe, no hacer nada
+    except FileNotFoundError:
+        with open(file_name, 'w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(['Date', 'Player', 'Score'])  # Cabecera del CSV
+
+def save_score(player_name, score, file_name='high_scores.csv'):
+    scores = []
+    try:
+        # Leer las puntuaciones existentes
+        with open(file_name, 'r', newline='') as file:
+            reader = csv.reader(file)
+            next(reader)  # Saltar la cabecera
+            scores = list(reader)
+    except FileNotFoundError:
+        # Si el archivo no existe, crear uno nuevo más adelante
+        pass
+
+    # Añadir la nueva puntuación
+    date_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    scores.append([date_str, player_name, str(score)])
+
+    # Ordenar las puntuaciones de mayor a menor
+    scores.sort(key=lambda x: int(x[2]), reverse=True)
+
+    # Mantener solo las 20 mejores puntuaciones
+    scores = scores[:20]
+
+    # Escribir las puntuaciones ordenadas en el archivo
+    with open(file_name, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Date', 'Player', 'Score'])  # Escribir la cabecera
+        writer.writerows(scores)
+
+# Función para leer la puntuación más alta
+def read_high_score(file_name='high_scores.csv'):
+    try:
+        with open(file_name, 'r') as file:
+            reader = csv.reader(file)
+            next(reader)  # Saltar la cabecera
+            high_score = 0
+            high_score_player = ''
+            for row in reader:
+                score = int(row[2])
+                if score > high_score:
+                    high_score = score
+                    high_score_player = row[1]
+        return high_score_player, high_score
+    except FileNotFoundError:
+        return 0
+
 # Función para mostrar la pantalla de inicio
 def show_start_screen():
+    high_score_player, high_score = read_high_score()
     screen.blit(start_screen, (0, 0))
     font = pygame.font.Font(None, 36)
-    text = font.render('Press 1,2 o 3 to select Player', True, WHITE)
-    screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2))
+    text = font.render('Press 1,2 or 3 to select Player', True, BLACK)
+    screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, SCREEN_HEIGHT // 2 + 60))
+    #high_score_text = font.render(f'High Score: {high_score}', True, BLACK) # pinta la max puntuacion
+    if high_score_player:
+        high_score_text = font.render(f'High Score: {high_score} by {high_score_player}', True, BLACK)
+    else:
+        high_score_text = font.render(f'High Score: {high_score}', True, BLACK)
+    screen.blit(high_score_text, (SCREEN_WIDTH // 2 - high_score_text.get_width() // 2, SCREEN_HEIGHT // 2 + 90))
     pygame.display.flip()
     selecting = True
     while selecting:
@@ -64,14 +137,28 @@ def show_start_screen():
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    return player1_image
+                    return player1_image, "Player 1"
                 elif event.key == pygame.K_2:
-                    return player2_image
+                    return player2_image, "Player 2"
                 elif event.key == pygame.K_3:
-                    return player3_image
+                    return player3_image, "Player 3"
 
 # Seleccionar jugador
-player_image = show_start_screen()
+#player_image = show_start_screen()
+player_image, player_name = show_start_screen()
+
+# Variables de desplazamiento
+background_x = 0
+scroll_speed = 1  # Velocidad de desplazamiento del fondo
+
+# Función para dibujar el fondo desplazado
+def draw_background():
+    global background_x
+    screen.blit(background, (background_x, 0))
+    screen.blit(background, (background_x + background_width, 0))
+    background_x -= scroll_speed
+    if background_x <= -background_width:
+        background_x = 0  # Reiniciar desplazamiento al final de la imagen
 
 # Clase Jugador
 class Player(pygame.sprite.Sprite):
@@ -79,7 +166,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.image = player_image  # Usar la imagen seleccionada
         self.collision_image = pygame.image.load('assets/player_collision.png').convert_alpha()
-        self.collision_image = pygame.transform.scale(self.collision_image, (70, 60))
+        self.collision_image = pygame.transform.scale(self.collision_image, (70, 70))
         self.rect = self.image.get_rect()
         self.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         self.speed_x = 0
@@ -130,7 +217,7 @@ class Player(pygame.sprite.Sprite):
 class Platform(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        self.image = pygame.image.load('assets/platform1.png').convert_alpha()
+        self.image = pygame.image.load('assets/patinete.png').convert_alpha()
         self.image = pygame.transform.scale(self.image, (random.randint(100, 200) , 20))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
@@ -148,7 +235,7 @@ class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.image = pygame.image.load('assets/kk.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (60, 60))
+        self.image = pygame.transform.scale(self.image, (50, 50))
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
         self.speed_x = random.randint(-5, -1)  # Velocidad aleatoria hacia la izquierda
@@ -165,8 +252,8 @@ class Enemy(pygame.sprite.Sprite):
 class Fruit(pygame.sprite.Sprite):
     def __init__(self, x, y, fruit_type, speed_x):
         super().__init__()
-        if fruit_type == 'tomato':
-            self.image = pygame.image.load('assets/tomato.png').convert_alpha()
+        if fruit_type == 'bocadillo':
+            self.image = pygame.image.load('assets/bocadillo.png').convert_alpha()
             self.value = 3
         else:
             self.image = pygame.image.load(f'assets/{fruit_type}.png').convert_alpha()
@@ -180,6 +267,9 @@ class Fruit(pygame.sprite.Sprite):
         self.rect.x += self.speed_x
         if self.rect.right < 0:
             self.kill()
+
+# Asegurar la creación del archivo CSV
+check_create_csv()
 
 # Crear grupos de sprites
 all_sprites = pygame.sprite.Group()
@@ -219,7 +309,7 @@ for _ in range(num_enemies):
 def create_fruit():
     x = SCREEN_WIDTH # lado derecho de la pantalla
     y = random.randint(0, SCREEN_HEIGHT - 30) # cualquier punto de la vertical 
-    fruit_type = random.choice(['apple', 'banana', 'grape', 'tomato'])
+    fruit_type = random.choice(['apple', 'banana', 'grape', 'tomato','bocadillo'])
     speed_x = random.randint(-3, -1)  # Velocidad aleatoria hacia la izquierda
     fruit = Fruit(x, y, fruit_type, speed_x)
     fruits.add(fruit)
@@ -297,6 +387,7 @@ while running:
         pygame.time.set_timer(pygame.USEREVENT, 1000)  # Temporizador de 0.5 segundos para restaurar la imagen original
         if player.lives == 0:
             print("Game Over")
+            save_score(player_name, player.points)  # Guardar la puntuación al finalizar el juego
             # Mostrar pantalla de GAME OVER
             screen.blit(game_over_image, (0, 0))
             draw_points(screen, player.points, (SCREEN_WIDTH // 2) + 100 , (SCREEN_HEIGHT // 2) + 100)  # Dibujar puntos
@@ -311,7 +402,8 @@ while running:
         print(f"Puntos: {player.points}")
 
     # Dibujar en la pantalla
-    screen.blit(background, (0, 0))  # Dibujar el fondo
+    draw_background()  # Dibujar el fondo desplazado
+    #screen.blit(background, (0, 0))  # Dibujar el fondo
     all_sprites.draw(screen)
     draw_lives(screen, 10, 10, player.lives, heart_image)  # Dibujar vidas
     draw_points(screen, player.points, SCREEN_WIDTH -10, 10)  # Dibujar puntos
