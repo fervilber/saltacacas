@@ -4,3 +4,4 @@
 .jpeg
 versiones/
 build/
+__pycache__/
